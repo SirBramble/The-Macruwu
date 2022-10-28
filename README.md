@@ -1,7 +1,7 @@
 # The Macruwu
 The Macropad for all! (well, at least, if you can understand the Clusterfuck posted here)
 The Firmware is based on the Arduino Pico Core by earlephilhower https://github.com/earlephilhower/arduino-pico. 
-I used it with the Seeed Studio Xiao RP2040, a very overpowered Board for he Job.
+I used it with the Seeed Studio Xiao RP2040, a very overpowered Board for the Job.
 
 ## How to compile
 
