@@ -1,8 +1,8 @@
 #ifndef EXPANDER_H_
 #define EXPANDER_H_
 
-#include <stdbool.h>
-#include <stdint.h>
+//#include <stdbool.h>
+//#include <stdint.h>
 //#ifdef USE_TINYUSB
 //#include <Adafruit_TinyUSB.h>
 //#endif
