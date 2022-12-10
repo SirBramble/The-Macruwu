@@ -4,20 +4,35 @@
 #include <Adafruit_TinyUSB.h>
 #endif
 //#include <string>
+#include <memory>
 #include <Arduino.h>
+#include "file_management.h"
+
+#define SEND_DELAY 3                        //USB Send Delay(in ms). Needed due to Instability while sending USB Commands
 
 //uint8_t hidcode[] = { HID_KEY_ARROW_RIGHT, HID_KEY_ARROW_LEFT, HID_KEY_ARROW_DOWN, HID_KEY_ARROW_UP };
 
 class Keyboard{
 public:
-  void write(String text);        //write any(isch) Character as a String
-  void backslash();               //prints a backslash
-  void goLeft(uint8_t ammount);   //presses the left arrow key 'ammount' times
-  void goRight(uint8_t ammount);  //presses the right arrow key 'ammount' times
-  void init();                    //setup shit. Call in Setup
-  void brackets(bool goToMiddle); //prints brackets "{}" ans jumps the coursor to the middle of them if wanted
+  String get_string_from_file(int layer, int button);                         //Mainly for debugging
+  void set_string_in_file(int layer, int button, String string_to_write);     //Mainly for debugging
+  void readFile();                          //Read File in to structure
+  void interpret(int layer, int button);    //write Characters from file Setup
+  void write(String text);                  //write any(isch) Character as a String
+  void backslash();                         //prints a backslash
+  void goLeft(uint8_t ammount);             //presses the left arrow key 'ammount' times
+  void goRight(uint8_t ammount);            //presses the right arrow key 'ammount' times
+  void init();                              //setup shit. Call in Setup
+  void brackets(bool goToMiddle = 0); //prints brackets "{}" and jumps the coursor to the middle of them if wanted
+  void writeKeycode(uint8_t Keycode, uint8_t Modifier = 0); //write a Keycode eather as a Number or as the predefined Keycode Keywords
+  bool fsChanged();       //resets Change Status on call
+  Keyboard(String filename = "macroLayout.txt", int ammountLayers = 5);
 private:
+  //std::unique_ptr<Interpreter> interpreter_ptr;
+  std::unique_ptr<Keymap> keymap_ptr;
   String sendString;
+  String filename;
+  int ammountLayers;
   uint8_t modifier;
   uint8_t const report_id = 0;
   uint8_t buffer[6] = {0};
@@ -159,6 +174,14 @@ private:
     {1, HID_KEY_GRAVE         }, /* 0x7E ~         */ \
     {0, HID_KEY_DELETE        }  /* 0x7F Delete    */ \
 
+#define KEY_MOD_LCTRL  0x01
+#define KEY_MOD_LSHIFT 0x02
+#define KEY_MOD_LALT   0x04
+#define KEY_MOD_LMETA  0x08
+#define KEY_MOD_RCTRL  0x10
+#define KEY_MOD_RSHIFT 0x20
+#define KEY_MOD_RALT   0x40
+#define KEY_MOD_RMETA  0x80
 
 
 #endif/* KEYBOARD_H_ */
