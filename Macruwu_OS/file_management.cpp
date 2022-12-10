@@ -96,7 +96,6 @@ void flash_setup()
     Serial.println("Failed to init files system, flash may not be formatted");
   }
 
-  Serial.println("Adafruit TinyUSB Mass Storage External Flash example");
   Serial.print("JEDEC ID: 0x"); Serial.println(flash.getJEDECID(), HEX);
   Serial.print("Flash size: "); Serial.print(flash.size() / 1024); Serial.println(" KB");
 
@@ -151,11 +150,19 @@ void flash_loop()
     }
 
     root.close();
-    flash_test();
+    //flash_test();
 
     Serial.println();
     delay(1000); // refresh every 1 second
   }
+}
+
+bool check_fs_changed(){
+  return fs_changed;
+}
+
+void set_fs_changed(bool fs_changed_in){
+  fs_changed = fs_changed_in;
 }
 
 void flash_test(){
@@ -262,7 +269,6 @@ String Layer::get(int indexButton){
 }
 void Layer::set(int indexButton, String funktionString){
     Button.at(indexButton) = funktionString;
-    Serial.println("Layer::set");
 }
 
 //////////
@@ -271,7 +277,6 @@ void Layer::set(int indexButton, String funktionString){
 Keymap::Keymap(String filename, int ammountLayers){
     this->filename = filename;
     this->ammountLayers = ammountLayers;
-    //flash_setup();
 }
 
 void Keymap::init(){
@@ -283,75 +288,50 @@ void Keymap::init(){
 
 String Keymap::get(int indexLayer, int indexButton){
     indexLayer--;
-    //indexButton--;
     if((indexLayer>=ammountLayers)||(indexLayer < 0)){return "";}
     if((indexButton>=AMMOUNT_KEYS)||(indexButton < 0)){return "";}
     return (&Layers.at(indexLayer))->get(indexButton);
 }
 
 void Keymap::set(int indexLayer, int indexButton, String funktionString){
-  Serial.println("Setting Start:");
+  Serial.println("Keymap Set Start:");
   Serial.print("indeyLayer: "); Serial.println(indexLayer);
   Serial.print("indeyButton: "); Serial.println(indexButton);
   Serial.print("funktionString: "); Serial.println(funktionString);
     if(ammountLayers < indexLayer){
-      //Layer newOne;
-      //Layer *newLayer = new Layer();
-      //Layers.push_back(newLayer);
-      //ammountLayers++;
-      //(&Layers.at(indexLayer))->set(indexButton, funktionString);
       Serial.println("Big Shit hit Fan. You no make Layers Vektor big enough in Keymap.");
     }
     else{
-      Serial.println("Keymap::set -> Layer::set");
-      Serial.print("Layers.size(): "); Serial.println(Layers.size());
-      Serial.print("Layers.capacity(): "); Serial.println(Layers.capacity());
       (&Layers.at(indexLayer))->set(indexButton, funktionString);
     }
-  Serial.println("Setting end:");
+  Serial.println("Keymap::set end:");
 }
 
 void Keymap::import(){
   Serial.println("Keymap Import:");
     String tmp;
     File32 macroLayout = fatfs.open(filename, FILE_READ);
+    
     if (!macroLayout.seek(0)) {
     Serial.println("Error, failed to seek back to start of file!");
     while(1) yield();
     }
+
     if (!macroLayout) {
       Serial.println("Error, failed to open file for reading!");
       while(1){
         delay(10);
-        //yield();
       }
+    macroLayout.close();
     }
     
-
     while (macroLayout.available()) {
       tmp = macroLayout.readStringUntil('\n');
-      Serial.println("...................................");
-      Serial.println("print tmp");
-      Serial.println(tmp);
-      Serial.println("...................................");
-      
-      Serial.println("...................................");
-      Serial.println("print getString(tmp)");
-      Serial.println(getString(tmp));
-      Serial.println("...................................");
-
-      Serial.println("...................................");
-      Serial.println("print getNum(tmp)");
-      Serial.println(getNum(tmp));
-      Serial.println("...................................");
       if(tmp.indexOf("Layer") != -1){
-        Serial.println("Setting Layer");
         currentLayer = getNum(tmp) - 1;
       }
       if(tmp.indexOf("Button") != -1){
-        Serial.println("Setting Button");
         set(currentLayer, getNum(tmp) - 1 , getString(tmp));
-        //set(currentLayer, getNum(tmp) - 1 , "test");
       }
     }
   macroLayout.close();
@@ -359,8 +339,6 @@ void Keymap::import(){
 
 int Keymap::getNum(String tmp){
     //Tipp: NEVER FUCKING USE ARDUINO STRINGS!!!! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH!
-    Serial.println("getNum start:");
-    Serial.print("print String tmp: "); Serial.println(tmp);
     int tmpPos_first = 0;
     int tmpPos_first_tmp = 0;
     bool found_first_first = 0;
@@ -369,42 +347,33 @@ int Keymap::getNum(String tmp){
     int returnNumber = 0;
     for(int i = 0; i < 10; i++){
       tmpPos_first_tmp = tmp.indexOf(digits[i]);
+
       if((tmpPos_first_tmp != -1)&&(found_first_first == 0)){
         tmpPos_first = tmpPos_first_tmp;
         found_first_first = 1;
       }
+
       if((tmpPos_first_tmp < tmpPos_first) && (tmpPos_first_tmp > 0)&&(found_first_first == 1)){
         tmpPos_first = tmpPos_first_tmp;
       }
+
       tmpPos_last_tmp = tmp.lastIndexOf(digits[i]);
+
       if(tmpPos_last_tmp > tmpPos_last){
         tmpPos_last = tmpPos_last_tmp;
       }
     }
-    //tmpPos_first = tmp.indexOf(digits);                                               //Possible Error Spot
-    //tmpPos_last = tmp.lastIndexOf(digits);
-    Serial.print("tmpPos_first: "); Serial.println(tmpPos_first);
-    Serial.print("tmpPos_last: "); Serial.println(tmpPos_last);
+
     String returnString = tmp.substring(tmpPos_first, (tmpPos_last + 1));
-    Serial.print("returnString: "); Serial.println(returnString);
-    Serial.print("returnString.length(): "); Serial.println(returnString.length());
     for(int i = 0; i < returnString.length(); i++){
-        Serial.print("Conversion char (as Number): "); Serial.println(returnString.charAt(i) - 48);
         returnNumber *= 10;
         returnNumber += returnString.charAt(i) - 48;
     }
-    Serial.print("returnNumber: "); Serial.println(returnNumber);
-    //char num[tmpPos_last - tmpPos_first + 1] = {0};
-    //tmp.copy(num, (tmpPos_last - tmpPos_first + 1), tmpPos_first);
 
-
-    //returnNumber = returnString.toInt();
-    Serial.println("getNum end:");
     return returnNumber;
 }
 
 String Keymap::getString(String tmp){
-    //return tmp.substring(tmp.lastIndexOf(":") + 2);
     return tmp.substring(tmp.lastIndexOf(":") + 2);
 }
 

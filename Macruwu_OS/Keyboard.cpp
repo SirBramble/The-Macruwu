@@ -28,22 +28,18 @@ void Keyboard::interpret(int layer, int button){
     String bufferString;
     for(uint32_t i = 0; i<stringToInterpret.length(); i++){
         charToInterpret = stringToInterpret.charAt(i);
-        Serial.print("charToInterpret: ");Serial.println(charToInterpret);
         if(((charToInterpret >= 65)&&(charToInterpret <= 90))||((charToInterpret >= 97)&&(charToInterpret <= 122))||(charToInterpret == ' ')){
-            Serial.println("Found shit to write");
             inBuffer = 1;
             bufferString += charToInterpret;
             continue;
         }
         else if(inBuffer){
-            Serial.println("Sending Buffer");
             write(bufferString);
             bufferString.remove(0, (bufferString.length()));
             inBuffer = 0;
             
         }
         if(charToInterpret == 36){                  //'$'
-          Serial.println("Dollar");
           write("$");
           continue;
         }
@@ -54,23 +50,19 @@ void Keyboard::interpret(int layer, int button){
           goRight(1);
         }
         if(charToInterpret == 92){                  // '\'
-            Serial.println("sending Backslash");
             backslash();
             continue;
         }
         if(charToInterpret == 95){                  //'_'
-          Serial.println("Sending underscore");
           writeKeycode(56, KEYBOARD_MODIFIER_LEFTSHIFT);
           continue;
         }
         if(charToInterpret == 123){                 // '{'
           if(stringToInterpret.charAt(i+1) == 125){   // '}'
-            Serial.println("Sending double Brackets");
             brackets();
             skipClosingBracket = 1;
           }
           else{
-            Serial.println("sending single Bracket open");
             clearBuffer();
             buffer[0] = HID_KEY_7;
             usb_hid.keyboardReport(report_id, KEYBOARD_MODIFIER_RIGHTALT, buffer);
@@ -82,7 +74,6 @@ void Keyboard::interpret(int layer, int button){
           continue;
         }
         if((charToInterpret == 125)&&(skipClosingBracket == 0)){                 // '}'
-          Serial.println("Sending single Bracket close");
           clearBuffer();
           buffer[0] = HID_KEY_0;
           usb_hid.keyboardReport(report_id, KEYBOARD_MODIFIER_RIGHTALT, buffer);
@@ -111,12 +102,10 @@ void Keyboard::interpret(int layer, int button){
             continue;
         }
         else{
-          Serial.print("The Funktion you have called is not available. Please call another.");
           //cout<<"you forgot to implement something you dummy"<<endl;
         }
     }
     if(inBuffer){
-        Serial.println("Sending Buffer");
         write(bufferString);
         bufferString.remove(0, (bufferString.length()));
         //cout<<"sending Buffer: "<<buffer<<endl;
@@ -139,7 +128,7 @@ void Keyboard::init(){
   keymap_ptr = std::unique_ptr<Keymap>(new Keymap(filename, ammountLayers));
   keymap_ptr->init();
   flash_setup();
-  //readFile();
+  readFile();
 }
 
 void Keyboard::write(String text){
@@ -161,7 +150,6 @@ void Keyboard::write(String text){
       }
       else{
         send();
-        Serial.print("broken");
         break;
       }
       if(c == (uint8_t)'y'){
@@ -185,7 +173,6 @@ void Keyboard::write(String text){
           modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
         }
         buffer[0] = conv_table[c][1];
-        //delay(SEND_DELAY);
         send();
         modifier = 0;
         i = 0;
@@ -204,10 +191,6 @@ void Keyboard::write(String text){
 
 void Keyboard::send(){
   Serial.print("send");
-  Serial.println("buffer: ");
-  for(int i = 0; i < 6; i++){
-      Serial.println(buffer[i]);
-  } 
 
   usb_hid.keyboardReport(report_id, modifier, buffer);
   delay(SEND_DELAY);
@@ -286,4 +269,12 @@ void Keyboard::writeKeycode(uint8_t Keycode, uint8_t Modifier){
   delay(SEND_DELAY);
   clearBuffer();
 
+}
+
+bool Keyboard::fsChanged(){
+  if(check_fs_changed()){
+    set_fs_changed(0);
+    return 1;
+  }
+  return 0;
 }

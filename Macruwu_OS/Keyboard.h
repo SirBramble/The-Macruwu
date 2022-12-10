@@ -25,6 +25,7 @@ public:
   void init();                              //setup shit. Call in Setup
   void brackets(bool goToMiddle = 0); //prints brackets "{}" and jumps the coursor to the middle of them if wanted
   void writeKeycode(uint8_t Keycode, uint8_t Modifier = 0); //write a Keycode eather as a Number or as the predefined Keycode Keywords
+  bool fsChanged();       //resets Change Status on call
   Keyboard(String filename = "macroLayout.txt", int ammountLayers = 5);
 private:
   //std::unique_ptr<Interpreter> interpreter_ptr;

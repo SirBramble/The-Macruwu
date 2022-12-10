@@ -15,45 +15,42 @@
 //#define DB_TIME 10              //in ms
 //#include "Expander.cpp"
 
-Expander Expander1;
-Expander Expander2;
+#define ADDone 0b0100000        
+#define ADDtwo 0b0100001
+
+Expander Expander1(ADDone);
+Expander Expander2(ADDtwo);
 
 Keyboard Macruwu;
 
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin();
-  Expander1.init(ADDone);
-  Expander2.init(ADDtwo);
-  flash_setup();
-  keyboardSetup();
-  Macruwu.init();
-  Serial.print("done init");
-  Macruwu.readFile();
-  neopixelSetup();
-  //keyboardSetup();
 
-  flash_test();
+  Wire.begin();               //start I²C for I/O expanders
 
+  flash_setup();              //Setup flash storage as mounted drive
+  //keyboardSetup();          //use this, if you with to use the Hardcoded Mapping
+  Macruwu.init();             //Setup code for file mapped Keyboard
+  neopixelSetup();            //Setup code for Neopixels
+
+  Serial.print("done innit?");
 }
 
 void loop() {
   //debug_serial();
-  if(Expander2.getState(12)){
+  //flash_loop();             //Try running this if you are having problems with the flash storage
+  
+  if(Macruwu.fsChanged()){
     Macruwu.readFile();
-    Serial.println("--------------------------------------------------------------------------------");
-    Serial.print("Macruwu.get_string_from_file: "); Serial.println(Macruwu.get_string_from_file(1, 1));
-    Serial.println("--------------------------------------------------------------------------------");
-    Macruwu.interpret(1, 1);
   }
-  flash_loop();
+
   run();
   testNeopixel();
   delay(1);
 }
 
-void debug_serial(){
+void debug_serial(){              //For testing the Inputs
   for(int i = 0; i < 16; i++){
     if(Expander1.getState(i) == 1){
       Serial.print("Button ");

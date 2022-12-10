@@ -23,7 +23,7 @@ bool Expander::getState(uint8_t pin){           //call with debounce time interv
   }
 }
 
-void Expander::init(uint8_t address_get){
+Expander::Expander(uint8_t address_get){
   address = address_get;
   }
 

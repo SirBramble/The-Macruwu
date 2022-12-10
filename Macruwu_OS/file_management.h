@@ -9,8 +9,11 @@
 #define AMMOUNT_KEYS 32
 
 void flash_setup();
-void flash_loop();
-void flash_test();
+void flash_loop();          //Returns contens of drive, when it is updated
+void flash_test();          //debug funktion to test, if the filesystem works properly
+
+bool check_fs_changed();
+void set_fs_changed(bool fs_changed_in);
 
 class Layer{
     public:
