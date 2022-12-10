@@ -1,7 +1,7 @@
 #ifndef FILE_MANAGEMENT_H
 #define FILE_MANAGEMENT_H
-#include <iostream>
-#include <fstream>
+//#include <iostream>
+//#include <fstream>
 #include <vector>
 #include <Arduino.h>
 
@@ -10,6 +10,7 @@
 
 void flash_setup();
 void flash_loop();
+void flash_test();
 
 class Layer{
     public:
@@ -22,10 +23,11 @@ class Layer{
 
 class Keymap{
     public:
-        Keymap(String filename);
+        Keymap(String filename, int ammountLayers);
         void import();
         String get(int indexlayer, int indexButton);    //für Bessere Verarbeitung sind übergabewerte nach der Textdatei angelegt
         void set(int Layer, int indexButton, String funktion_string);
+        void init();
     private:
         std::vector <Layer> Layers;
         int getNum(String tmp);

@@ -6,7 +6,6 @@
 //#include <string>
 #include <memory>
 #include <Arduino.h>
-#include "Interpreter.h"
 #include "file_management.h"
 
 #define SEND_DELAY 3                        //USB Send Delay(in ms). Needed due to Instability while sending USB Commands
@@ -26,12 +25,13 @@ public:
   void init();                              //setup shit. Call in Setup
   void brackets(bool goToMiddle = 0); //prints brackets "{}" and jumps the coursor to the middle of them if wanted
   void writeKeycode(uint8_t Keycode, uint8_t Modifier = 0); //write a Keycode eather as a Number or as the predefined Keycode Keywords
-  Keyboard(String filename = "macroLayout.txt");
+  Keyboard(String filename = "macroLayout.txt", int ammountLayers = 5);
 private:
-  std::unique_ptr<Interpreter> interpreter_ptr;
+  //std::unique_ptr<Interpreter> interpreter_ptr;
   std::unique_ptr<Keymap> keymap_ptr;
   String sendString;
   String filename;
+  int ammountLayers;
   uint8_t modifier;
   uint8_t const report_id = 0;
   uint8_t buffer[6] = {0};

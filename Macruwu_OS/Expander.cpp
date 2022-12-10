@@ -19,7 +19,7 @@ bool Expander::getState(uint8_t pin){           //call with debounce time interv
     return 1;
   }
   else{
-    return 0;  
+    return 0;
   }
 }
 

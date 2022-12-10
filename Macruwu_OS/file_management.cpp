@@ -103,6 +103,8 @@ void flash_setup()
   fs_changed = true; // to print contents initially
 }
 
+
+
 void flash_loop()
 {
   if ( fs_changed )
@@ -131,6 +133,9 @@ void flash_loop()
     // Open next file in root.
     // Warning, openNext starts at the current directory position
     // so a rewind of the directory may be required.
+
+
+
     while ( file.openNext(&root, O_RDONLY) )
     {
       file.printFileSize(&Serial);
@@ -146,12 +151,97 @@ void flash_loop()
     }
 
     root.close();
-
+    flash_test();
 
     Serial.println();
     delay(1000); // refresh every 1 second
   }
 }
+
+void flash_test(){
+  Serial.println("Creating deep folder structure...");
+  if ( !fatfs.exists("/test/foo/bar") ) {
+    Serial.println("Creating /test/foo/bar");
+    fatfs.mkdir("/test/foo/bar");
+
+    if ( !fatfs.exists("/test/foo/bar") ) {
+      Serial.println("Error, failed to create directory!");
+      while(1) yield();
+    }else {
+      Serial.println("Created directory!");
+    }
+  }
+  String filename_to_open = "macroLayout.txt";
+  File32 readFile = fatfs.open(filename_to_open, FILE_READ);
+  if (!readFile) {
+    Serial.println("Error, failed to open test.txt for reading!");
+    while(1) yield();
+  }
+
+  String file;
+  while (readFile.available()) {
+    file.concat((char)readFile.read());
+  }
+  Serial.println("file at 3:");
+  Serial.println(file.charAt(3));
+  if(file.indexOf('\n') != -1){
+    Serial.println("found some shit");
+  }
+
+  if (!readFile.seek(0)) {
+    Serial.println("Error, failed to seek back to start of file!");
+    while(1) yield();
+  }
+
+  Serial.println("Entire contents of file:");
+  while (readFile.available()) {
+    char c = (char)readFile.read();
+    Serial.print(c);
+  }
+  String sub;
+  Serial.println("Entire contents of file from string:");
+  Serial.println(file);
+  Serial.println("linewise:");
+    if (!readFile.seek(0)) {
+      Serial.println("Error, failed to seek back to start of file!");
+      while(1) yield();
+    }
+    while(readFile.available()){
+      sub = readFile.readStringUntil('\n');
+      Serial.println(sub);
+    }
+    readFile.close();
+
+    Serial.println("Test for File Readin:");
+    String tmp;
+    String filename = "macroLayout.txt";
+    File32 macroLayout = fatfs.open(filename, FILE_READ);
+    if (!macroLayout.seek(0)) {
+    Serial.println("Error, failed to seek back to start of file!");
+    while(1) yield();
+    }
+    if (!macroLayout) {
+      Serial.println("Error, failed to open file for reading!");
+      while(1){
+        delay(10);
+        //yield();
+      }
+    }
+    
+
+    while (macroLayout.available()) {
+      tmp = macroLayout.readStringUntil('\n');
+      Serial.println(tmp);
+      if(tmp.indexOf("Layer") != -1){
+          //currentLayer = getNum(tmp) - 1;
+      }
+      if(tmp.indexOf("Button") != -1){
+          //set(currentLayer, getNum(tmp) - 1 , getString(tmp));
+      }
+    }
+  macroLayout.close();
+}
+
 
 
 const char* digits = "0123456789";
@@ -162,44 +252,73 @@ const char* digits = "0123456789";
 /////////
 //Layer//
 /////////
+Layer::Layer(){
+    for(int i = 0; i < AMMOUNT_KEYS; i++){
+        Button.push_back("");
+    }
+}
 String Layer::get(int indexButton){
     return Button.at(indexButton);
 }
 void Layer::set(int indexButton, String funktionString){
     Button.at(indexButton) = funktionString;
+    Serial.println("Layer::set");
 }
 
 //////////
 //Keymap//
 //////////
-Keymap::Keymap(String filename){
+Keymap::Keymap(String filename, int ammountLayers){
     this->filename = filename;
+    this->ammountLayers = ammountLayers;
     //flash_setup();
-    ammountLayers = 0;
+}
+
+void Keymap::init(){
+  Layers.reserve(ammountLayers);
+  for(int i = 0; i < ammountLayers; i++){
+    Layers.push_back(Layer());
+  }
 }
 
 String Keymap::get(int indexLayer, int indexButton){
     indexLayer--;
-    indexButton--;
-    if(indexLayer>=ammountLayers){return "";}
+    //indexButton--;
+    if((indexLayer>=ammountLayers)||(indexLayer < 0)){return "";}
+    if((indexButton>=AMMOUNT_KEYS)||(indexButton < 0)){return "";}
     return (&Layers.at(indexLayer))->get(indexButton);
 }
 
 void Keymap::set(int indexLayer, int indexButton, String funktionString){
+  Serial.println("Setting Start:");
+  Serial.print("indeyLayer: "); Serial.println(indexLayer);
+  Serial.print("indeyButton: "); Serial.println(indexButton);
+  Serial.print("funktionString: "); Serial.println(funktionString);
     if(ammountLayers < indexLayer){
-      Layer newOne;
-      Layers.push_back(newOne);
-      ammountLayers++;
+      //Layer newOne;
+      //Layer *newLayer = new Layer();
+      //Layers.push_back(newLayer);
+      //ammountLayers++;
+      //(&Layers.at(indexLayer))->set(indexButton, funktionString);
+      Serial.println("Big Shit hit Fan. You no make Layers Vektor big enough in Keymap.");
     }
     else{
-        (&Layers.at(indexLayer))->set(indexButton, funktionString);
+      Serial.println("Keymap::set -> Layer::set");
+      Serial.print("Layers.size(): "); Serial.println(Layers.size());
+      Serial.print("Layers.capacity(): "); Serial.println(Layers.capacity());
+      (&Layers.at(indexLayer))->set(indexButton, funktionString);
     }
-    
+  Serial.println("Setting end:");
 }
 
 void Keymap::import(){
+  Serial.println("Keymap Import:");
     String tmp;
     File32 macroLayout = fatfs.open(filename, FILE_READ);
+    if (!macroLayout.seek(0)) {
+    Serial.println("Error, failed to seek back to start of file!");
+    while(1) yield();
+    }
     if (!macroLayout) {
       Serial.println("Error, failed to open file for reading!");
       while(1){
@@ -208,45 +327,84 @@ void Keymap::import(){
       }
     }
     
-    //ifstream macroLayout;
-    //macroLayout.open(filename);
+
     while (macroLayout.available()) {
-      while(String tmp = macroLayout.readStringUntil('\n')){
-        if(tmp.indexOf("Layer") != -1){
-            currentLayer = getNum(tmp) - 1;
-        }
-        if(tmp.indexOf("Button") != -1){
-            set(currentLayer, getNum(tmp) - 1 , getString(tmp));
-        }
+      tmp = macroLayout.readStringUntil('\n');
+      Serial.println("...................................");
+      Serial.println("print tmp");
+      Serial.println(tmp);
+      Serial.println("...................................");
+      
+      Serial.println("...................................");
+      Serial.println("print getString(tmp)");
+      Serial.println(getString(tmp));
+      Serial.println("...................................");
+
+      Serial.println("...................................");
+      Serial.println("print getNum(tmp)");
+      Serial.println(getNum(tmp));
+      Serial.println("...................................");
+      if(tmp.indexOf("Layer") != -1){
+        Serial.println("Setting Layer");
+        currentLayer = getNum(tmp) - 1;
+      }
+      if(tmp.indexOf("Button") != -1){
+        Serial.println("Setting Button");
+        set(currentLayer, getNum(tmp) - 1 , getString(tmp));
+        //set(currentLayer, getNum(tmp) - 1 , "test");
       }
     }
   macroLayout.close();
 }
 
 int Keymap::getNum(String tmp){
+    //Tipp: NEVER FUCKING USE ARDUINO STRINGS!!!! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH!
+    Serial.println("getNum start:");
+    Serial.print("print String tmp: "); Serial.println(tmp);
     int tmpPos_first = 0;
+    int tmpPos_first_tmp = 0;
+    bool found_first_first = 0;
     int tmpPos_last = 0;
+    int tmpPos_last_tmp = 0;
     int returnNumber = 0;
-    tmpPos_first = tmp.indexOf(digits);                                               //Possible Error Spot
-    tmpPos_last = tmp.lastIndexOf(digits);
-    String returnString = tmp.substring(tmpPos_first, tmpPos_last);
-    returnNumber = returnString.toInt();
+    for(int i = 0; i < 10; i++){
+      tmpPos_first_tmp = tmp.indexOf(digits[i]);
+      if((tmpPos_first_tmp != -1)&&(found_first_first == 0)){
+        tmpPos_first = tmpPos_first_tmp;
+        found_first_first = 1;
+      }
+      if((tmpPos_first_tmp < tmpPos_first) && (tmpPos_first_tmp > 0)&&(found_first_first == 1)){
+        tmpPos_first = tmpPos_first_tmp;
+      }
+      tmpPos_last_tmp = tmp.lastIndexOf(digits[i]);
+      if(tmpPos_last_tmp > tmpPos_last){
+        tmpPos_last = tmpPos_last_tmp;
+      }
+    }
+    //tmpPos_first = tmp.indexOf(digits);                                               //Possible Error Spot
+    //tmpPos_last = tmp.lastIndexOf(digits);
+    Serial.print("tmpPos_first: "); Serial.println(tmpPos_first);
+    Serial.print("tmpPos_last: "); Serial.println(tmpPos_last);
+    String returnString = tmp.substring(tmpPos_first, (tmpPos_last + 1));
+    Serial.print("returnString: "); Serial.println(returnString);
+    Serial.print("returnString.length(): "); Serial.println(returnString.length());
+    for(int i = 0; i < returnString.length(); i++){
+        Serial.print("Conversion char (as Number): "); Serial.println(returnString.charAt(i) - 48);
+        returnNumber *= 10;
+        returnNumber += returnString.charAt(i) - 48;
+    }
+    Serial.print("returnNumber: "); Serial.println(returnNumber);
     //char num[tmpPos_last - tmpPos_first + 1] = {0};
     //tmp.copy(num, (tmpPos_last - tmpPos_first + 1), tmpPos_first);
-    //for(int i = 0; i < sizeof(num); i++){
-    //    returnNumber *= 10;
-    //    returnNumber = num[i] - 48;
-    //}
+
+
+    //returnNumber = returnString.toInt();
+    Serial.println("getNum end:");
     return returnNumber;
 }
 
 String Keymap::getString(String tmp){
-    int tmpPos_first;
+    //return tmp.substring(tmp.lastIndexOf(":") + 2);
     return tmp.substring(tmp.lastIndexOf(":") + 2);
 }
 
-Layer::Layer(){
-    for(int i = 0; i < AMMOUNT_KEYS; i++){
-        Button.push_back("");
-    }
-}

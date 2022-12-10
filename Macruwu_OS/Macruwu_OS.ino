@@ -18,7 +18,7 @@
 Expander Expander1;
 Expander Expander2;
 
-//Keyboard Macruwu;
+Keyboard Macruwu;
 
 
 void setup() {
@@ -26,19 +26,28 @@ void setup() {
   Wire.begin();
   Expander1.init(ADDone);
   Expander2.init(ADDtwo);
-  //flash_setup();
+  flash_setup();
   keyboardSetup();
-  //Macruwu.init();
+  Macruwu.init();
   Serial.print("done init");
-  //Macruwu.readFile();
+  Macruwu.readFile();
   neopixelSetup();
   //keyboardSetup();
+
+  flash_test();
+
 }
 
 void loop() {
   //debug_serial();
-  
-  //flash_loop();
+  if(Expander2.getState(12)){
+    Macruwu.readFile();
+    Serial.println("--------------------------------------------------------------------------------");
+    Serial.print("Macruwu.get_string_from_file: "); Serial.println(Macruwu.get_string_from_file(1, 1));
+    Serial.println("--------------------------------------------------------------------------------");
+    Macruwu.interpret(1, 1);
+  }
+  flash_loop();
   run();
   testNeopixel();
   delay(1);
@@ -62,14 +71,17 @@ void debug_serial(){
 void run(){
   for(int i = 0; i < 16; i++){
     if(Expander1.getState(i)){
-      action(i);
+      //action(i);
+      Macruwu.interpret(1, i);
     }
   }
   for(int i = 0; i < 16; i++){
     if(Expander2.getState(i)){
-      action(i+16);
+      //action(i+16);
+      Macruwu.interpret(1, i+16);
     }
   }
+  
   
 }
 
