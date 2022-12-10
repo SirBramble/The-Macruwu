@@ -2,6 +2,7 @@
 The Macropad for all! (well, at least, if you can understand the Clusterfuck posted here)
 The Firmware is based on the Arduino Pico Core by earlephilhower https://github.com/earlephilhower/arduino-pico. 
 
+
 ## Components used
 
 I went with the RP2040 based board from seeed studio. It has a fast chip, offers integrated USB support and is only about 6$. However, it has limited GPIO pins. So if you want to build your own, I would recommend using I/O Expanders or something similar. A nother option would be to use a raspberry Pi with a RP2040. This Board beaks out most of the RP2040 Pins and has Options for Wifi.
