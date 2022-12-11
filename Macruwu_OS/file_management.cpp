@@ -93,12 +93,14 @@ void flash_setup()
 
   if ( !fs_formatted )
   {
+    #ifdef SERIAL_DEBUG
     Serial.println("Failed to init files system, flash may not be formatted");
+    #endif
   }
-
+  #ifdef SERIAL_DEBUG
   Serial.print("JEDEC ID: 0x"); Serial.println(flash.getJEDECID(), HEX);
   Serial.print("Flash size: "); Serial.print(flash.size() / 1024); Serial.println(" KB");
-
+  #endif
   fs_changed = true; // to print contents initially
 }
 
@@ -166,22 +168,22 @@ void set_fs_changed(bool fs_changed_in){
 }
 
 void flash_test(){
-  Serial.println("Creating deep folder structure...");
-  if ( !fatfs.exists("/test/foo/bar") ) {
-    Serial.println("Creating /test/foo/bar");
-    fatfs.mkdir("/test/foo/bar");
-
-    if ( !fatfs.exists("/test/foo/bar") ) {
-      Serial.println("Error, failed to create directory!");
-      while(1) yield();
-    }else {
-      Serial.println("Created directory!");
-    }
-  }
   String filename_to_open = "macroLayout.txt";
+  if(!fatfs.exists(filename_to_open)){
+    Serial.println("macroLayout.txt does not exist");
+    Serial.println("Trying to create macroLayout.txt...");
+    File32 writeFile = fatfs.open("macroLayout.txt", FILE_WRITE);
+    if (!writeFile) {
+      Serial.println("Error, failed to open macroLayout.txt for writing!");
+      while(1) yield();
+    }
+    Serial.println("Created macroLayout.txt succesfully");
+    writeFile.println("This is a test line, please ignore...");
+    writeFile.close();
+  }
   File32 readFile = fatfs.open(filename_to_open, FILE_READ);
   if (!readFile) {
-    Serial.println("Error, failed to open test.txt for reading!");
+    Serial.println("Error, failed to open macroLayout.txt for reading!");
     while(1) yield();
   }
 
@@ -218,35 +220,7 @@ void flash_test(){
       Serial.println(sub);
     }
     readFile.close();
-
-    Serial.println("Test for File Readin:");
-    String tmp;
-    String filename = "macroLayout.txt";
-    File32 macroLayout = fatfs.open(filename, FILE_READ);
-    if (!macroLayout.seek(0)) {
-    Serial.println("Error, failed to seek back to start of file!");
-    while(1) yield();
-    }
-    if (!macroLayout) {
-      Serial.println("Error, failed to open file for reading!");
-      while(1){
-        delay(10);
-        //yield();
-      }
-    }
-    
-
-    while (macroLayout.available()) {
-      tmp = macroLayout.readStringUntil('\n');
-      Serial.println(tmp);
-      if(tmp.indexOf("Layer") != -1){
-          //currentLayer = getNum(tmp) - 1;
-      }
-      if(tmp.indexOf("Button") != -1){
-          //set(currentLayer, getNum(tmp) - 1 , getString(tmp));
-      }
-    }
-  macroLayout.close();
+  delay(1000);
 }
 
 
@@ -259,8 +233,8 @@ const char* digits = "0123456789";
 /////////
 //Layer//
 /////////
-Layer::Layer(){
-    for(int i = 0; i < AMMOUNT_KEYS; i++){
+Layer::Layer(int ammountKeys){
+    for(int i = 0; i < ammountKeys; i++){
         Button.push_back("");
     }
 }
@@ -274,51 +248,69 @@ void Layer::set(int indexButton, String funktionString){
 //////////
 //Keymap//
 //////////
-Keymap::Keymap(String filename, int ammountLayers){
+Keymap::Keymap(String filename, int ammountLayers, int ammountKeys){
     this->filename = filename;
     this->ammountLayers = ammountLayers;
+    this->ammountKeys = ammountKeys;
 }
 
 void Keymap::init(){
   Layers.reserve(ammountLayers);
   for(int i = 0; i < ammountLayers; i++){
-    Layers.push_back(Layer());
+    Layers.push_back(Layer(ammountKeys));
   }
 }
 
 String Keymap::get(int indexLayer, int indexButton){
     indexLayer--;
     if((indexLayer>=ammountLayers)||(indexLayer < 0)){return "";}
-    if((indexButton>=AMMOUNT_KEYS)||(indexButton < 0)){return "";}
+    if((indexButton>=this->ammountKeys)||(indexButton < 0)){return "";}
     return (&Layers.at(indexLayer))->get(indexButton);
 }
 
 void Keymap::set(int indexLayer, int indexButton, String funktionString){
+  #ifdef SERIAL_DEBUG
   Serial.println("Keymap Set Start:");
   Serial.print("indeyLayer: "); Serial.println(indexLayer);
   Serial.print("indeyButton: "); Serial.println(indexButton);
   Serial.print("funktionString: "); Serial.println(funktionString);
-    if(ammountLayers < indexLayer){
-      Serial.println("Big Shit hit Fan. You no make Layers Vektor big enough in Keymap.");
-    }
-    else{
-      (&Layers.at(indexLayer))->set(indexButton, funktionString);
-    }
+  #endif
+  if(ammountLayers < indexLayer){
+    #ifdef SERIAL_DEBUG
+    Serial.println("Big Shit hit Fan. You no make Layers Vektor big enough in Keymap.");
+    #endif
+  }
+  else{
+    (&Layers.at(indexLayer))->set(indexButton, funktionString);
+  }
+  #ifdef SERIAL_DEBUG
   Serial.println("Keymap::set end:");
+  #endif
 }
 
 void Keymap::import(){
+  #ifdef SERIAL_DEBUG
   Serial.println("Keymap Import:");
+  #endif
+    for(int i = 0; i < ammountLayers; i++){                   //Clear Mapping Structure
+      for(int n = 0; n < AMMOUNT_KEYS; n++){
+        this->set(i, n, "");
+      }
+    }
     String tmp;
     File32 macroLayout = fatfs.open(filename, FILE_READ);
     
     if (!macroLayout.seek(0)) {
-    Serial.println("Error, failed to seek back to start of file!");
-    while(1) yield();
+      #ifdef SERIAL_DEBUG
+      Serial.println("Error, failed to seek back to start of file!");
+      #endif
+      while(1) yield();
     }
 
     if (!macroLayout) {
+      #ifdef SERIAL_DEBUG
       Serial.println("Error, failed to open file for reading!");
+      #endif
       while(1){
         delay(10);
       }

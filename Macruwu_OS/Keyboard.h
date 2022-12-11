@@ -9,6 +9,7 @@
 #include "file_management.h"
 
 #define SEND_DELAY 3                        //USB Send Delay(in ms). Needed due to Instability while sending USB Commands
+//#define SERIAL_DEBUG                      //Uncomment to enable Debugging
 
 //uint8_t hidcode[] = { HID_KEY_ARROW_RIGHT, HID_KEY_ARROW_LEFT, HID_KEY_ARROW_DOWN, HID_KEY_ARROW_UP };
 
@@ -22,23 +23,27 @@ public:
   void backslash();                         //prints a backslash
   void goLeft(uint8_t ammount);             //presses the left arrow key 'ammount' times
   void goRight(uint8_t ammount);            //presses the right arrow key 'ammount' times
-  void init();                              //setup shit. Call in Setup
-  void brackets(bool goToMiddle = 0); //prints brackets "{}" and jumps the coursor to the middle of them if wanted
+  void init();                              //setup shit. Call in setup()
+  void brackets(bool goToMiddle = 0);       //prints brackets "{}" and jumps the coursor to the middle of them if wanted
+  void bracketsSquare(bool goToMiddle = 0);      //prints square brackets "[]" and jumps the coursor to the middle of them if wanted
   void writeKeycode(uint8_t Keycode, uint8_t Modifier = 0); //write a Keycode eather as a Number or as the predefined Keycode Keywords
-  bool fsChanged();       //resets Change Status on call
-  Keyboard(String filename = "macroLayout.txt", int ammountLayers = 5);
+  bool fsChanged();       //returns file system change status and resets Change Status on call
+  Keyboard(String filename = "macroLayout.txt", int ammountLayers = 5, int ammountKeys = 32);
 private:
-  //std::unique_ptr<Interpreter> interpreter_ptr;
   std::unique_ptr<Keymap> keymap_ptr;
   String sendString;
-  String filename;
-  int ammountLayers;
-  uint8_t modifier;
+  String filename;                                //The Layout File ascociated with the Keyboard Object
+  int ammountLayers;                              //ammount of Layers controlled by the Keyboard Object
+  int ammountKeys;                                //the ammount of Keys controled by the Keyboard object
+  uint8_t modifier;                               //intermethod modifier storage. may get removed in future
   uint8_t const report_id = 0;
-  uint8_t buffer[6] = {0};
-  void send();
-  bool isLetterSmall(char c);
-  void clearBuffer();
+  uint8_t buffer[6] = {0};                        //send buffer. is limited to size 6 by USB Keyboard protokoll
+  bool bufferSetFlag = 0;                         //is set, when buffer has sendable characters
+  void send(uint8_t mod = 0);                     //sends buffer[] with Modifier Key 0 (NULL/no modifier) by default
+  bool isLetterSmall(char c);                     //checks if a Character is small
+  void clearBuffer();                             //clears buffer and resets bufferSetFlag
+  void setBuffer(uint8_t index, uint8_t value);   //sets buffer at index 'index' with value 'value' and sets bufferSetFlag
+  bool bufferClear();                             //returns bufferSetFlag
 };
 
 #define HID_ASCII_TO_KEYCODE \

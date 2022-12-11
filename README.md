@@ -18,6 +18,8 @@ If you want some realy clicky Keyswitches, that will any the hell out of anybody
 ## How to compile
 
 ### With the Arduino IDE 2.0
+First download the Code either from the repo or via the release tab. Put it in a folder and open the ```Macruwu_OS.ino``` file.
+
 In order to compile the Code, you need to install the Arduino Pico core. There is a Tutorial on how to do this on earlephilhowers Github. You will also need the Adafruit SPIFlash Library. It can be downloaded via the Library Manager. The rest should be included in the Pico Core.
 If you get Library conflicts, I´m afraid, you´re on youre own. I somehow got it to compile and hav´nt touched my setup since. No Idea why it sudenly worked, but the only thing I can recomend, is to back up your Librarys and start fresh.
 

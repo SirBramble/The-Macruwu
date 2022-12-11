@@ -7,7 +7,7 @@
 
 
 #define AMMOUNT_KEYS 32
-
+//#define SERIAL_DEBUG      //Uncomment to enable Debugging
 void flash_setup();
 void flash_loop();          //Returns contens of drive, when it is updated
 void flash_test();          //debug funktion to test, if the filesystem works properly
@@ -17,7 +17,7 @@ void set_fs_changed(bool fs_changed_in);
 
 class Layer{
     public:
-        Layer();
+        Layer(int ammountKeys);
         void set(int indexButton, String funktionString);
         String get(int indexButton);
     private:
@@ -26,7 +26,7 @@ class Layer{
 
 class Keymap{
     public:
-        Keymap(String filename, int ammountLayers);
+        Keymap(String filename, int ammountLayers, int ammountKeys);
         void import();
         String get(int indexlayer, int indexButton);    //für Bessere Verarbeitung sind übergabewerte nach der Textdatei angelegt
         void set(int Layer, int indexButton, String funktion_string);
@@ -38,6 +38,7 @@ class Keymap{
 
         int currentLayer;
         int ammountLayers;
+        int ammountKeys;
         String filename;
 };
 
