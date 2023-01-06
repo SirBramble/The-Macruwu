@@ -33,12 +33,13 @@ void setup() {
   Wire.begin();               //start I²C for I/O expanders
   flash_setup();              //Setup flash storage as mounted drive
   //flash_test();             //try running if flsh storage won´t work. will try to create File and run some Tests.
-                              //concider running it in loop(), due to a bug, where Serial prints are not sent from setup()
+                              //concider running it on call in loop(), due to a bug, where Serial prints are not sent from setup()
+  //flash_clear();            //If your filesystem or mapping file is corrupted, run this to clear the storage
   //keyboardSetup();          //use this, if you with to use the Hardcoded Mapping
   Macruwu.init();             //Setup code for file mapped Keyboard
   neopixelSetup();            //Setup code for Neopixels
 
-  Serial.print("done innit?");
+  Serial.println("done innit?");
 }
 
 void loop() {
@@ -56,13 +57,13 @@ void loop() {
 
 void debug_serial(){              //For testing the Inputs
   for(int i = 0; i < 16; i++){
-    if(Expander1.getState(i)){
+    if(Expander1.getStatePulse(i)){
       Serial.print("Button ");
       Serial.println(i);
       }  
   }
   for(int i = 0; i < 16; i++){
-    if(Expander2.getState(i)){
+    if(Expander2.getStatePulse(i)){
       Serial.print("Button ");
       Serial.println(i+16);
       }  
@@ -71,15 +72,19 @@ void debug_serial(){              //For testing the Inputs
 
 void run(){
   for(int i = 0; i < 16; i++){
-    if(Expander1.getState(i)){
+    if(Expander1.getStatePulse(i)){
       //action(i);              //enable if you wish to run hardcoded mapping
+      long before = millis();
       Macruwu.interpret(1, i);
+      Serial.print("Time taken: "); Serial.println(millis()-before);
     }
   }
   for(int i = 0; i < 16; i++){
-    if(Expander2.getState(i)){
-      //action(i+16);
+    if(Expander2.getStatePulse(i)){
+      //action(i+16);           //enable if you wish to run hardcoded mapping
+      long before = millis();
       Macruwu.interpret(1, i+16);
+      Serial.print("Time taken: "); Serial.println(millis()-before);
     }
   }
   

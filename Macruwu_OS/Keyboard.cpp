@@ -28,37 +28,71 @@ void Keyboard::interpret(int layer, int button){
   String bufferString;
   for(uint32_t i = 0; i<stringToInterpret.length(); i++){
     charToInterpret = stringToInterpret.charAt(i);
-    if(((charToInterpret >= 65)&&(charToInterpret <= 90))||((charToInterpret >= 97)&&(charToInterpret <= 122))||(charToInterpret == ' ')){    //checks for printable Letters with the write funktion
-        inBuffer = 1;               //fill up the bufferString until the nect character is not part if the printable characters of the write() funktion
-        bufferString += charToInterpret;
-        continue;
+    #ifdef SERIAL_DEBUG
+    Serial.print(this->plainFlag);
+    #endif
+/////////////////////////////////////////////////////////////////Commands/////////////////////////////////////////////////////////////////
+    if(this->plainFlag == 0){
+      if(charToInterpret == 92){                  //checks for '\'
+        if(stringToInterpret.charAt(i+1) == 'n'){
+          this->writeKeycode(HID_KEY_ENTER);
+          i++;
+          continue;
+        }
+        if(stringToInterpret.charAt(i+1) == 't'){
+          this->writeKeycode(HID_KEY_TAB);
+          i++;
+          continue;
+        }
+        if(stringToInterpret.indexOf("plain{", i+1) == i+1){
+          i += 6;
+          this->plainFlag = 1;
+          #ifdef SERIAL_DEBUG
+          Serial.print("plain flag set");
+          #endif
+          continue;
+        }
+      }
+    }
+/////////////////////////////////////////////////////////////plain text/////////////////////////////////////////////////////////////////
+    if(((charToInterpret >= 65)&&(charToInterpret <= 90))||((charToInterpret >= 97)&&(charToInterpret <= 122))||(charToInterpret == ' ')||(charToInterpret == '.')||((charToInterpret >= 48)&&(charToInterpret <= 57))){    //checks for printable Letters with the write funktion
+      inBuffer = 1;               //fill up the bufferString until the nect character is not part if the printable characters of the write() funktion
+      bufferString += charToInterpret;
+      continue;
     }
     else if(inBuffer){              //if the read character is no longer part of the printable write() characters, send the bufferString
-        this->write(bufferString);
-        bufferString.remove(0, (bufferString.length()));
-        inBuffer = 0;
-        
+      this->write(bufferString);
+      bufferString.remove(0, (bufferString.length()));
+      inBuffer = 0;
     }
-    if(charToInterpret == 36){                  //checks for '$'
+    if(charToInterpret == '<'){                 //checks for '<'and triggers the left arrow key
+        if(this->plainFlag == 1){               //If the plain flag is set with the '\plain' command, '<' is printed as a character
+          this->writeKeycode(0x64);
+          continue;
+        }
+        this->goLeft(1);                        //DO NOT ADD 'continue;'. THIS WILL BREAK EVERYTHING! (dont know why...)
+      }
+    if(charToInterpret == '>'){                 //checks for '>' and triggers the right arrow key
+      if(this->plainFlag == 1){                 //If the plain flag is set with the '\plain' command, '>' is printed as a character
+        this->writeKeycode(0x64, KEYBOARD_MODIFIER_LEFTSHIFT);
+        continue;
+      }
+      this->goRight(1);                         //DO NOT ADD 'continue;'. THIS WILL BREAK EVERYTHING! (dont know why...)
+    }
+    if(charToInterpret == '|'){                 //checks for '|'
+      this->writeKeycode(0x64, KEYBOARD_MODIFIER_RIGHTALT);
+      continue;
+    }
+    if(charToInterpret == '$'){                 //checks for '$'
       this->write("$");
       continue;
     }
-    if(charToInterpret == '<'){                 //checks for '<' and triggers the left arrow key
-      this->goLeft(1);
-    }
-    if(charToInterpret == '>'){                 //checks for '>' and triggers the right arrow key
-      this->goRight(1);
-    }
-    if(charToInterpret == 92){                  //checks for '\'
-      this->backslash();
-      continue;
-    }
-    if(charToInterpret == '_'){                  //checks for '_'
+    if(charToInterpret == '_'){                 //checks for '_'
       this->writeKeycode(56, KEYBOARD_MODIFIER_LEFTSHIFT);
       continue;
     }
     if(charToInterpret == '{'){                 //checks for '{'
-      if(stringToInterpret.charAt(i+1) == 125){   //checks next character for '}' and if found, sends both brackets at once (to save time)
+      if(stringToInterpret.charAt(i+1) == 125){ //checks next character for '}' and if found, sends both brackets at once (to save time)
         this->brackets();
         i++;
       }
@@ -68,6 +102,11 @@ void Keyboard::interpret(int layer, int button){
       continue;
     }
     if(charToInterpret == '}'){                 //checks for '}'
+      if(this->plainFlag == 1){
+        this->plainFlag = 0;
+        i++;
+        continue;
+      }
       this->writeKeycode(HID_KEY_0, KEYBOARD_MODIFIER_RIGHTALT);
       continue;
     }
@@ -90,6 +129,11 @@ void Keyboard::interpret(int layer, int button){
       //cout<<"send funny to the power of symbol thingymabob"<<endl;
         continue;
     }
+    if(charToInterpret == 92){
+      this->backslash();
+      continue;
+    }
+/////////////////////////////////////////////////////////////end////////////////////////////////////////////////////////////////////////
   }
   if(inBuffer){                       //runs, if last character war part of the printable characters from write()
       write(bufferString);

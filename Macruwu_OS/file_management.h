@@ -10,6 +10,7 @@
 //#define SERIAL_DEBUG      //Uncomment to enable Debugging
 void flash_setup();
 void flash_loop();          //Returns contens of drive, when it is updated
+void flash_clear();
 void flash_test();          //debug funktion to test, if the filesystem works properly
 
 bool check_fs_changed();
@@ -28,7 +29,7 @@ class Keymap{
     public:
         Keymap(String filename, int ammountLayers, int ammountKeys);
         void import();
-        String get(int indexlayer, int indexButton);    //für Bessere Verarbeitung sind übergabewerte nach der Textdatei angelegt
+        String get(int indexlayer, int indexButton);
         void set(int Layer, int indexButton, String funktion_string);
         void init();
     private:

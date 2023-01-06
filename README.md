@@ -2,14 +2,15 @@
 The Macropad for all! (well, at least, if you can understand the Clusterfuck posted here)
 The Firmware is based on the Arduino Pico Core by earlephilhower https://github.com/earlephilhower/arduino-pico. 
 
+**This is only a brief overview** The full documentation and instructions can be found in the "Documentation"-folder.
 
 ## Components used
 
-I went with the RP2040 based board from seeed studio. It has a fast chip, offers integrated USB support and is only about 6$. However, it has limited GPIO pins. So if you want to build your own, I would recommend using I/O Expanders or something similar. A nother option would be to use a raspberry Pi with a RP2040. This Board beaks out most of the RP2040 Pins and has Options for Wifi.
+I went with the RP2040 based board from seeed studio. It has a fast chip, offers integrated USB support and is only about 6€. However, it has limited GPIO pins. So if you want to build your own, I would recommend using I/O Expanders or something similar. A nother option would be to use a raspberry Pi with a RP2040. This Board beaks out most of the RP2040 Pins and has Options for Wifi.
 
 In order to try out different Keyswitches and keep the Macruwu modular, I decided to use hotswap sockets. They arent to expensive, if you order them for Aliexpress (about 1\$/10psc). But beware, when soldering. If youre Borad Manufacturer decides to give you the shit coating on your Pads, prepare for heavy flux use.
 
-For the I/O Expanders I used the PCA9555 from NXP. They conviniantly dont need a lot of setup and are automatically set to INPUT_PULLUP. The detailed Adressing sceme and co can be found in the Datasheet. But, as per usual nowadays, the I/O expanders are sold out. So you might want to look for them somewhere else, or find a suitable replacement. But if you can find them, I can recommend the NXP Expanders. They need minimal to no Software Setup and I haven’t had a dead one so far.
+For the I/O Expanders I used the PCA9555 from NXP. They conviniantly dont need a lot of setup and are automatically set to INPUT_PULLUP. The detailed Adressing sceme and co can be found in the Datasheet. But, as per usual nowadays, the I/O expanders are sold out. So you might want to look for them somewhere else, or find a suitable replacement. But if you can find them, I can recommend the NXP Expanders. They need minimal to no Software Setup and I haven't had a dead one so far.
 
 The level shifter (TXU0104PWR) is a cheap option I got from Mouser. It has 4 Chanels it can shift and is enough for the two 5V I²C Lines ans the Neopixel line.
 
@@ -21,7 +22,7 @@ If you want some realy clicky Keyswitches, that will any the hell out of anybody
 First download the Code either from the repo or via the release tab. Put it in a folder and open the ```Macruwu_OS.ino``` file.
 
 In order to compile the Code, you need to install the Arduino Pico core. There is a Tutorial on how to do this on earlephilhowers Github. You will also need the Adafruit SPIFlash Library. It can be downloaded via the Library Manager. The rest should be included in the Pico Core.
-If you get Library conflicts, I´m afraid, you´re on youre own. I somehow got it to compile and hav´nt touched my setup since. No Idea why it sudenly worked, but the only thing I can recomend, is to back up your Librarys and start fresh.
+If you get Library conflicts, I'm afraid you're on youre own. I somehow got it to compile and hav'nt touched my setup since. No Idea why it sudenly worked, but the only thing I can recomend, is to back up your Librarys and start fresh.
 
 EDIT: If you get a Library conflict, you may want to look for other Bugs. Sometimes the Arduino IDE shows this message, just to inform you, that it has used a cirtain Library. However, your Code may not comile due to a nother error.
 
@@ -56,12 +57,14 @@ In order to run the commands that have been set in the Datastructure you will ha
 ### With Hardcoded Mapping
 The Keymapping can be set in the ```Mapping.cpp```.
 
-In order to write something over USB, you can use ```Keyboard1.write("something");``` But this only works for most normal characters like letters and sometimes other specialty symbols. You´ll have to try it out. Things like Brackets or things that use Funktionkeys, will have to be set up manualy. This can eather be done, by sending the commands via the Tiny USB library directly, or by adding a new funktion to the Keyboard class. But look through the Keyboard class, as I may add more Funktions in the future.
+In order to write something over USB, you can use ```Keyboard1.write("something");``` But this only works for most normal characters like letters and sometimes other specialty symbols. You'll have to try it out. Things like Brackets or things that use Funktionkeys, will have to be set up manualy. This can eather be done, by sending the commands via the Tiny USB library directly, or by adding a new funktion to the Keyboard class. But look through the Keyboard class, as I may add more Funktions in the future.
 
-**Word of Warning:** If you do not have a US Keyboard, be prepared for some HID Code treasurehunting. I havn´t found a way to change the layout, so you eather have to find a Layout and redefine all the keys in the Library, or just try and hope you find what you need. If you have a German Keyboardlayout set, you can referance the code for some mappings.
+**Word of Warning:** If you do not have a US Keyboard, be prepared for some HID Code treasurehunting. I havn't found a way to change the layout, so you eather have to find a Layout and redefine all the keys in the Library, or just try and hope you find what you need. If you have a German Keyboardlayout set, you can referance the code for some mappings.
 
 ## Bugs
 Yes
 
 ## Further documentation
 I recomend reading the documentation by earlephilhower https://github.com/earlephilhower/arduino-pico. It´s a far better than this clusterfuck, but feel free to look through the code.
+
+And in case you didn't read the first 3 lines, you can find more documentation in the "Documentation"-folder.

@@ -135,8 +135,6 @@ void flash_loop()
     // Warning, openNext starts at the current directory position
     // so a rewind of the directory may be required.
 
-
-
     while ( file.openNext(&root, O_RDONLY) )
     {
       file.printFileSize(&Serial);
@@ -165,6 +163,29 @@ bool check_fs_changed(){
 
 void set_fs_changed(bool fs_changed_in){
   fs_changed = fs_changed_in;
+}
+
+void flash_clear(){
+  if (!flash.eraseChip()) {
+    Serial.println("Failed to erase chip!");
+  }
+
+  flash.waitUntilReady();
+  Serial.println("Successfully erased chip!");
+  
+  String filename_to_open = "macroLayout.txt";
+  if(!fatfs.exists(filename_to_open)){
+    Serial.println("macroLayout.txt does not exist");
+    Serial.println("Trying to create macroLayout.txt...");
+    File32 writeFile = fatfs.open("macroLayout.txt", FILE_WRITE);
+    if (!writeFile) {
+      Serial.println("Error, failed to open macroLayout.txt for writing!");
+      while(1) yield();
+    }
+    Serial.println("Created macroLayout.txt succesfully");
+    writeFile.println("This is a test line, please ignore...");
+    writeFile.close();
+  }
 }
 
 void flash_test(){
@@ -299,31 +320,46 @@ void Keymap::import(){
     }
     String tmp;
     File32 macroLayout = fatfs.open(filename, FILE_READ);
-    
+
+    if (!macroLayout) {
+      #ifdef SERIAL_DEBUG
+      Serial.println("Error, failed to open file for reading!");
+      Serial.println("Creating blank config file");
+      #endif
+      macroLayout.close();
+      File32 blankLayout = fatfs.open(filename, FILE_WRITE);
+      if(!blankLayout){
+        while(1){
+          #ifdef SERIAL_DEBUG
+            Serial.println("If you can read this, the filesystem is fucked!");
+          #endif
+          delay(10);
+        }
+      }
+      blankLayout.close();
+    }
+
     if (!macroLayout.seek(0)) {
       #ifdef SERIAL_DEBUG
       Serial.println("Error, failed to seek back to start of file!");
       #endif
       while(1) yield();
     }
-
-    if (!macroLayout) {
-      #ifdef SERIAL_DEBUG
-      Serial.println("Error, failed to open file for reading!");
-      #endif
-      while(1){
-        delay(10);
-      }
-    macroLayout.close();
-    }
     
     while (macroLayout.available()) {
       tmp = macroLayout.readStringUntil('\n');
       if(tmp.indexOf("Layer") != -1){
         currentLayer = getNum(tmp) - 1;
+        if(currentLayer == -1){
+          continue;
+        }
       }
       if(tmp.indexOf("Button") != -1){
-        set(currentLayer, getNum(tmp) - 1 , getString(tmp));
+        int sendNum = getNum(tmp);
+        if(sendNum == -1){
+          continue;
+        }
+        set(currentLayer, sendNum - 1 , getString(tmp));
       }
     }
   macroLayout.close();
@@ -331,6 +367,7 @@ void Keymap::import(){
 
 int Keymap::getNum(String tmp){
     //Tipp: NEVER FUCKING USE ARDUINO STRINGS!!!! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH!
+    /*
     int tmpPos_first = 0;
     int tmpPos_first_tmp = 0;
     bool found_first_first = 0;
@@ -355,13 +392,71 @@ int Keymap::getNum(String tmp){
         tmpPos_last = tmpPos_last_tmp;
       }
     }
+    */
+
+    int tmpPos_first = -1;
+    int tmpPos_last = 0;
+    int indexOfDigits;
+    int indexDoubleDot = tmp.indexOf(":");
+    int returnNumber = 0;
+    if(indexDoubleDot == -1){                                     //if no doubleDot was found, something went wrong. return -1
+      return -1;
+    }
+    String searchString = tmp.substring(0, indexDoubleDot);
+
+    for(int i = 0; i < 10; i++){                                  //find lowest index of any number in String
+      indexOfDigits = searchString.indexOf(digits[i]);
+      if(indexOfDigits == -1){                                    //if no number found in String, skip this loop itteration
+        continue;
+      }
+      if(tmpPos_first == -1){
+        tmpPos_first = indexOfDigits;
+      }
+      else if((indexOfDigits < tmpPos_first)&&(indexOfDigits != -1)){
+        tmpPos_first = indexOfDigits;
+      }
+    }
+
+    if(tmpPos_first == -1){                                       //if no number was found in String, return -1
+      return -1;
+    }
+    tmpPos_last = tmpPos_first;                                   //try and prevent crashes
+
+    for(int i = 0; i < 10; i++){
+      indexOfDigits = searchString.lastIndexOf(digits[i]);        //returns last number found after the first number in the string
+      if(indexOfDigits == -1){                                    //if no number found in String, skip this loop itteration
+        continue;
+      }
+      if(indexOfDigits > indexDoubleDot){                         //if the number found comes after the ':', skip this loop itteration
+        continue;
+      }
+      if(indexOfDigits > tmpPos_last){                            //if a number is found between the first found number and the ':', save this number as the last position
+        tmpPos_last = indexOfDigits;
+      }
+    }
+
+    if((tmpPos_last-tmpPos_first) > 2){                           //if the distance between the 2 points is to large, something went wrong. return -1
+      return -1;
+    }
+    
+    #ifdef SERIAL_DEBUG
+    Serial.print("tmpPos_first: ");Serial.println(tmpPos_first);
+    Serial.print("tmpPos_last: ");Serial.println(tmpPos_last);
+    #endif
 
     String returnString = tmp.substring(tmpPos_first, (tmpPos_last + 1));
     for(int i = 0; i < returnString.length(); i++){
         returnNumber *= 10;
         returnNumber += returnString.charAt(i) - 48;
     }
+    if((returnNumber <= 0)&&(returnNumber > 999)){
+      return -1;
+    }
 
+    #ifdef SERIAL_DEBUG
+    Serial.print("return Number in getNum(): ");Serial.println(returnNumber);
+    #endif
+    
     return returnNumber;
 }
 

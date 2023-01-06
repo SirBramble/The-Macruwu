@@ -39,6 +39,7 @@ private:
   uint8_t const report_id = 0;
   uint8_t buffer[6] = {0};                        //send buffer. is limited to size 6 by USB Keyboard protokoll
   bool bufferSetFlag = 0;                         //is set, when buffer has sendable characters
+  bool plainFlag = 0;                             //triggers, when \plain command with brackets is opened (\plain{stuff to write in plain text}<- until here)
   void send(uint8_t mod = 0);                     //sends buffer[] with Modifier Key 0 (NULL/no modifier) by default
   bool isLetterSmall(char c);                     //checks if a Character is small
   void clearBuffer();                             //clears buffer and resets bufferSetFlag
