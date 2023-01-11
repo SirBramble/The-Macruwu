@@ -185,7 +185,14 @@ simplified
 	\subsubsection{'Keyboard' class}
 	This construct is then controlled by the 'Keyboard'-class. This builds a interface for the 'main' to access but also introduces some of its own functionality. The 'Keyboard'-class manages all the HID(Human interface device)-commands and also houses the interpreter to convert the command strings to sendable HID key-codes. This is done internally for the most part, but exposes all the relevant interface methods to the main. For example the 'interpret(layer, button)'-method interprets and runs the command stored in the command string at the given layer and button as a HID command.\newline
 	\textbf{NOTE:} All HID commands are set to work with a German keyboard layout. Most of them still work with a US or similar layout, but you might have to change some special character key-codes like '\verb=^=' or '\verb=\='.\newline
-	There are also other methods included in the class. The 'readFile()'-method in combination with the 'fsChanged()'-method can auto-update the 'Layer-Button'-structure from the 'macroLayout.txt'-file whenever the file is edited.
+	Edit: I found a overview of a keyboard with the corresponding key-codes depicted on every key. This should be universal to all Keyboards. May be useful...
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.9\textwidth]{HIDkeys}
+		\caption{Mapped HID Keys}
+	\end{figure}
+	
+	\noindent There are also other methods included in the class. The 'readFile()'-method in combination with the 'fsChanged()'-method can auto-update the 'Layer-Button'-structure from the 'macroLayout.txt'-file whenever the file is edited.
 	\subsubsection{'noepixel' functions}
 	So far not a lot has been done here. These are just some function prototypes, saved in a separate file. 'neopixelSetup()' just initialises the Adafruit library and 'testNeopixel()' just runs a slow rainbow-effect.
 	\subsubsection{'Expander' class}
